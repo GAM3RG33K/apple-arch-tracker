@@ -16,6 +16,7 @@ export interface AuditedItem {
   type: 'application' | 'brew-binary' | 'brew-service' | 'npm-native-addon';
   issue?: string;
   recommendation?: string;
+  path?: string;
 }
 
 export interface ParseResult {

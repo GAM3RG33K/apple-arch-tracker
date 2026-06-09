@@ -179,12 +179,26 @@ export const parseTrackerLog = (log: string): ParseResult => {
       continue;
     }
 
-    // Parse the separated lines: "Item Name             | Architecture"
+    // Parse the separated lines: "Item Name | [Path] | Architecture"
+    // Supports both 2-column (name|arch) and 3-column (name|path|arch) formats
     if (line.includes('|')) {
       const parts = line.split('|');
       if (parts.length >= 2) {
-        const name = parts[0].trim();
-        const arch = parts[1].trim();
+        let name: string;
+        let arch: string;
+        let itemPath: string | undefined;
+
+        if (parts.length === 3) {
+          // New 3-column format: name | path | arch
+          name = parts[0].trim();
+          itemPath = parts[1].trim();
+          arch = parts[2].trim();
+        } else {
+          // Legacy 2-column format: name | arch
+          name = parts[0].trim();
+          arch = parts[1].trim();
+          itemPath = undefined;
+        }
 
         if (!name || !arch) continue;
 
@@ -217,7 +231,7 @@ export const parseTrackerLog = (log: string): ParseResult => {
         }
 
         // If it is Intel, mark for migration list
-        if (arch.toLowerCase().includes('intel') || arch.toLowerCase().includes('x86_64')) {
+          if (arch.toLowerCase().includes('intel') || arch.toLowerCase().includes('x86_64')) {
           const defaults = getStaticRecommendation(name, type);
           itemsToMigrate.push({
             id: `item-${currentModule}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${i}`,
@@ -225,7 +239,8 @@ export const parseTrackerLog = (log: string): ParseResult => {
             architecture: 'Intel Only (x86_64)',
             type,
             issue: defaults.issue,
-            recommendation: defaults.recommendation
+            recommendation: defaults.recommendation,
+            path: itemPath
           });
         }
       }

@@ -142,6 +142,11 @@ export default function RemediationFeed({ result, filterType, searchQuery }: Rem
                       <p className="text-2xs text-gray-400 truncate max-w-[340px] leading-normal">
                         {item.issue}
                       </p>
+                      {item.path && (
+                        <p className="text-3xs text-gray-500 font-mono mt-0.5 truncate max-w-[340px]">
+                          {item.path}
+                        </p>
+                      )}
                     </div>
                     <div className="shrink-0 text-gray-500 hover:text-white transition-colors">
                       {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -156,6 +161,14 @@ export default function RemediationFeed({ result, filterType, searchQuery }: Rem
                         <span className="font-semibold text-rose-400 block mb-0.5 font-mono">Emulation Diagnostic:</span>
                         {item.issue}
                       </div>
+
+                      {/* Installation Path */}
+                      {item.path && (
+                        <div className="text-2xs leading-relaxed text-gray-300">
+                          <span className="font-semibold text-gray-400 block mb-0.5 font-mono">Installation Path:</span>
+                          <code className="text-cyan-300 font-mono bg-black/40 px-1.5 py-0.5 rounded">{item.path}</code>
+                        </div>
+                      )}
 
                       {/* Action command if present */}
                       {item.recommendation && (
