@@ -649,7 +649,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
     var items = [];
     var module = null;
     var lines = log.split("\n");
-    var stats = {universal:0,arm64:intel:0,jsOnly:0,unknown:0};
+    var stats = {universal:0,arm64:0,intel:0,jsOnly:0,unknown:0};
 
     for(var i=0;i<lines.length;i++){
       var line = lines[i].trim();
