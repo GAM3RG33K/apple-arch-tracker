@@ -105,8 +105,11 @@ export default function App() {
             <Cpu className="w-10 h-10 stroke-[1.5]" />
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold text-white tracking-tight leading-tight mb-4 max-w-3xl">
-            Identify Emulated Binaries Slowing Down Your Mac
+            Mac Arch Tracker
           </h1>
+          <h2 className="text-2xl sm:text-3xl font-display font-bold text-gray-200 tracking-tight mb-4 max-w-3xl">
+            Identify Emulated Binaries Slowing Down Your Mac
+          </h2>
           <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
             A standalone, offline-first command line utility. Audit your entire Apple Silicon system for legacy Intel (x86_64) workloads draining battery and CPU cycles.
           </p>
@@ -152,11 +155,11 @@ export default function App() {
 
       <footer className="border-t border-gray-900 bg-[#090d16]/30 py-8 text-center text-xs text-gray-500 font-mono">
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-2">
-          <div className="flex items-center gap-2 text-gray-400">
+          <a href="https://github.com/GAM3RG33K/apple-arch-tracker" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
             <Github className="w-4 h-4" />
             <span>Open Source on GitHub</span>
-          </div>
-          <p>© {new Date().getFullYear()} Mac Architecture Audit Toolchain.</p>
+          </a>
+          <p>&copy; 2026 - <a href="https://harshjoshi.dev" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 transition-colors">Harshvardhan Joshi</a></p>
         </div>
       </footer>
     </div>
