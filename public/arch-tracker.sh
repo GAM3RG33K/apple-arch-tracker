@@ -902,8 +902,8 @@ HTML_EOF
     sed -i '' "s|HTML_B64_PLACEHOLDER|${B64_LOG}|g" "$HTML_FILE"
 
     echo -e "\n${GREEN}Interactive Report Generated: ${BOLD}${HTML_FILE}${NC}"
-    echo -e "Open ${HTML_FILE} in your browser to view the full dashboard."
-    echo -e "Use the 'Replace Log Data' section at the bottom to update the report with new scan output."
+    echo -e "Opening report in your default browser..."
+    open "$HTML_FILE"
     rm -f "$TMP_LOG"
 else
     run_scans
