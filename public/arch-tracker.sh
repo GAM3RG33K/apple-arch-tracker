@@ -451,7 +451,7 @@ if [ "$OUTPUT_REPORT" = true ]; then
     LOGO_B64=$(base64 -i "$SCRIPT_DIR/logo.svg" 2>/dev/null | tr -d '\n')
     if [ -z "$LOGO_B64" ]; then
         # Fallback: download logo from GitHub Pages
-        LOGO_B64=$(curl -sL https://GAM3RG33K.github.io/apple-arch-tracker/logo.svg 2>/dev/null | base64 | tr -d '\n')
+        LOGO_B64=$(curl -sL https://arch-tracker.harshjoshi.dev/logo.svg 2>/dev/null | base64 | tr -d '\n')
     fi
     
     cat << 'HTML_EOF' > "$HTML_FILE"
@@ -605,7 +605,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         <div class="subtitle">Offline Audit Report</div>
       </div>
     </div>
-    <button class="back-btn" onclick="window.location.href='https://GAM3RG33K.github.io/apple-arch-tracker/'">&larr; Full Dashboard</button>
+    <button class="back-btn" onclick="window.location.href='https://arch-tracker.harshjoshi.dev/'">&larr; Full Dashboard</button>
   </div>
 
   <div id="metrics"></div>
