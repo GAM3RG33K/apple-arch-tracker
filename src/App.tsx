@@ -46,10 +46,8 @@ export default function App() {
         {/* Universal Top Header bar */}
         <header className="border-b border-gray-900 bg-[#090d16] sticky top-0 z-50 shadow-md select-none">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded bg-gradient-to-br from-indigo-500 to-cyan-400 border border-indigo-400/20 text-white shrink-0 shadow-lg shadow-indigo-950/20">
-                <Cpu className="w-5 h-5 stroke-[2]" />
-              </div>
+            <div className="flex items-center gap-3">
+              <img src="/logo.svg" alt="Logo" className="w-8 h-8 rounded-lg shadow-lg shadow-indigo-950/20" />
               <div>
                 <div className="flex items-center gap-1.5">
                   <h1 className="text-md sm:text-lg font-display font-bold text-white tracking-tight">
@@ -101,8 +99,9 @@ export default function App() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-indigo-600/10 blur-[100px] rounded-full pointer-events-none"></div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative z-10 text-center flex flex-col items-center">
-          <div className="p-3 mb-6 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-cyan-400/20 border border-indigo-400/30 text-cyan-400 inline-block shadow-2xl">
-            <Cpu className="w-10 h-10 stroke-[1.5]" />
+          <div className="mb-6 rounded-[2rem] bg-[#090D16] shadow-2xl relative">
+            <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-indigo-500/20 to-cyan-400/20 blur-lg -z-10"></div>
+            <img src="/logo.svg" alt="Mac Arch Tracker Logo" className="w-[120px] h-[120px]" />
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold text-white tracking-tight leading-tight mb-4 max-w-3xl">
             Mac Arch Tracker
