@@ -1,0 +1,6 @@
+{
+  "name": "Mac Architecture Tracker",
+  "description": "An interactive tool to generate, customize, and analyze audit reports of macOS application architectures, Homebrew packages, and global NPM modules to eliminate Intel emulation bottlenecks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
