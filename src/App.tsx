@@ -35,7 +35,7 @@ export default function App() {
   };
 
   const copyInstallCommand = () => {
-    navigator.clipboard.writeText('curl -sL https://YOUR_USERNAME.github.io/YOUR_REPO/arch-tracker.sh | bash -s -- --report');
+    navigator.clipboard.writeText('curl -sL https://GAM3RG33K.github.io/apple-arch-tracker/arch-tracker.sh | bash -s -- --report');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -116,7 +116,7 @@ export default function App() {
             <div className="flex items-center gap-3 overflow-hidden">
               <Terminal className="w-5 h-5 text-gray-500 shrink-0" />
               <code className="text-xs sm:text-sm font-mono text-cyan-300 truncate whitespace-nowrap">
-                curl -sL https://YOUR_USERNAME.github.io/YOUR_REPO/arch-tracker.sh | bash -s -- --report
+                curl -sL https://GAM3RG33K.github.io/apple-arch-tracker/arch-tracker.sh | bash -s -- --report
               </code>
             </div>
             <button

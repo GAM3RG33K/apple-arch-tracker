@@ -458,7 +458,7 @@ try {
     const rawLog = decodeURIComponent(escape(atob("${B64_LOG}")));
     localStorage.setItem('mac-arch-tracker-raw-log', rawLog);
     // Automatically forwards you to the Github Pages Dashboard Viewer
-    window.location.href = 'https://YOUR_GITHUB_USERNAME.github.io/YOUR_REPO/';
+    window.location.href = 'https://GAM3RG33K.github.io/apple-arch-tracker/';
 } catch(e) {
     document.body.innerHTML += '<p style="color:red">Error parsing report data.</p>';
 }
