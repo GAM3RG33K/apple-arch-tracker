@@ -37,7 +37,7 @@ export default function MetricsDashboard({
           const arch = parts[1].trim().toLowerCase();
           if (arch.includes('universal')) universal++;
           else if (arch.includes('apple silicon') || arch.includes('arm64')) arm64++;
-          else if (arch.includes('javascript') || arch.includes('agnostic')) jsOnly++;
+          else if (arch.includes('javascript') || arch.includes('agnostic') || arch.includes('script')) jsOnly++;
         }
       }
     });

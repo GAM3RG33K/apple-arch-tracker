@@ -124,36 +124,66 @@ get_binary_arch() {
         return
     fi
     
+    # Get file type for script detection and fallback
+    local file_type
+    file_type=$(file -b "$file_path" 2>/dev/null)
+    
+    # Check if it's a script or text file (platform-agnostic)
+    if [[ "$file_type" =~ "script" ]] || [[ "$file_type" =~ "text executable" ]] || [[ "$file_type" =~ "ASCII text" ]] || [[ "$file_type" =~ "JSON" ]] || [[ "$file_type" =~ "XML" ]]; then
+        echo "Script"
+        return
+    fi
+    
     # Run lipo to check architectures
     local lipo_out
     lipo_out=$(lipo -info "$file_path" 2>/dev/null)
+    local lipo_exit=$?
     
-    if [ $? -ne 0 ] || [ -z "$lipo_out" ]; then
-        # Check if file command provides hints
-        local file_out
-        file_out=$(file "$file_path" 2>/dev/null)
-        if [[ "$file_out" =~ "arm64" && "$file_out" =~ "x86_64" ]]; then
+    if [ $lipo_exit -eq 0 ] && [ -n "$lipo_out" ]; then
+        # Analyze lipo -info output
+        # Format: "Architectures in the fat file: <file> are: x86_64 arm64" or "Non-fat file: <file> is architecture: arm64"
+        if [[ "$lipo_out" =~ "x86_64" && "$lipo_out" =~ "arm64" ]]; then
             echo "Universal"
-        elif [[ "$file_out" =~ "arm64" ]]; then
+        elif [[ "$lipo_out" =~ "arm64" ]]; then
             echo "arm64"
-        elif [[ "$file_out" =~ "x86_64" ]]; then
+        elif [[ "$lipo_out" =~ "x86_64" ]]; then
             echo "x86_64"
         else
-            echo "Unknown"
+            # lipo succeeded but output didn't match known patterns
+            # Fall through to file command
+            if [[ "$file_type" =~ "arm64" ]]; then
+                echo "arm64"
+            elif [[ "$file_type" =~ "x86_64" ]]; then
+                echo "x86_64"
+            else
+                echo "Unknown"
+            fi
         fi
         return
     fi
     
-    # Analyze lipo -info output
-    # Format of lipo -info: "Architectures in the fat file: <file> are: x86_64 arm64" or "Non-fat file: <file> is architecture: arm64"
-    if [[ "$lipo_out" =~ "x86_64" && "$lipo_out" =~ "arm64" ]]; then
+    # lipo failed, try file command
+    if [[ "$file_type" =~ "arm64" && "$file_type" =~ "x86_64" ]]; then
         echo "Universal"
-    elif [[ "$lipo_out" =~ "arm64" ]]; then
+    elif [[ "$file_type" =~ "arm64" ]]; then
         echo "arm64"
-    elif [[ "$lipo_out" =~ "x86_64" ]]; then
+    elif [[ "$file_type" =~ "x86_64" ]]; then
         echo "x86_64"
     else
-        echo "Unknown"
+        # Try otool as last resort for Mach-O binaries
+        if command -v otool &>/dev/null; then
+            local otool_out
+            otool_out=$(otool -hv "$file_path" 2>/dev/null)
+            if [[ "$otool_out" =~ "arm64" ]]; then
+                echo "arm64"
+            elif [[ "$otool_out" =~ "x86_64" ]]; then
+                echo "x86_64"
+            else
+                echo "Unknown"
+            fi
+        else
+            echo "Unknown"
+        fi
     fi
 }
 
@@ -206,6 +236,9 @@ scan_applications() {
                     ;;
                 "x86_64")
                     printf "%-35s | %-50s | %b%s%b\n" "$app_name" "$app_path" "$RED" "Intel Only (x86_64)" "$NC"
+                    ;;
+                "Script")
+                    printf "%-35s | %-50s | %b%s%b\n" "$app_name" "$app_path" "$GREEN" "Script (Platform Agnostic)" "$NC"
                     ;;
                 *)
                     printf "%-35s | %-50s | %b%s%b\n" "$app_name" "$app_path" "$YELLOW" "Unknown Architecture" "$NC"
@@ -269,6 +302,9 @@ scan_homebrew() {
                         "x86_64")
                             print_row "$svc (Service)" "Intel Only (x86_64)" "$RED"
                             ;;
+                        "Script")
+                            print_row "$svc (Service)" "Script (Platform Agnostic)" "$GREEN"
+                            ;;
                         *)
                             print_row "$svc (Service)" "Unknown Architecture" "$YELLOW"
                             ;;
@@ -283,12 +319,48 @@ scan_homebrew() {
     # 2. General Brew Formulae (analyzing main binaries)
     brew list --formula 2>/dev/null | sort | while read -r formula; do
         local tool_bin=""
-        if [ -x "$brew_prefix/bin/$formula" ]; then
-            tool_bin="$brew_prefix/bin/$formula"
-        else
-            # Try finding an executable file in cellar matching formula name
+        local formula_clean="${formula//@/}"
+        
+        # Try multiple binary name patterns
+        for bin_name in "$formula" "$formula_clean" "${formula_clean%%@*}" "${formula_clean##*@}"; do
+            if [ -x "$brew_prefix/bin/$bin_name" ]; then
+                tool_bin="$brew_prefix/bin/$bin_name"
+                break
+            fi
+        done
+        
+        # If the found file is a script, try to find an actual Mach-O binary
+        if [ -n "$tool_bin" ] && [ -f "$tool_bin" ]; then
+            local file_type
+            file_type=$(file -b "$tool_bin" 2>/dev/null)
+            if [[ "$file_type" =~ "script" ]] || [[ "$file_type" =~ "text" ]]; then
+                # Look for a binary in the Cellar bin directory
+                local cellar_bin
+                cellar_bin=$(find "$brew_prefix/Cellar/$formula" -path "*/bin/*" -type f -perm +111 2>/dev/null | while read -r f; do
+                    local ft
+                    ft=$(file -b "$f" 2>/dev/null)
+                    if [[ ! "$ft" =~ "script" ]] && [[ ! "$ft" =~ "text" ]]; then
+                        echo "$f"
+                        break
+                    fi
+                done)
+                if [ -n "$cellar_bin" ]; then
+                    tool_bin="$cellar_bin"
+                fi
+            fi
+        fi
+        
+        # If still no binary found, try finding any executable in cellar
+        if [ -z "$tool_bin" ] || [ ! -f "$tool_bin" ]; then
             local formula_cellar
-            formula_cellar=$(find "$brew_prefix/Cellar/$formula" -maxdepth 3 -type f -perm +111 -maxdepth 4 2>/dev/null | head -n 1)
+            formula_cellar=$(find "$brew_prefix/Cellar/$formula" -maxdepth 3 -type f -perm +111 2>/dev/null | while read -r f; do
+                local ft
+                ft=$(file -b "$f" 2>/dev/null)
+                if [[ ! "$ft" =~ "script" ]] && [[ ! "$ft" =~ "text" ]]; then
+                    echo "$f"
+                    break
+                fi
+            done)
             if [ -n "$formula_cellar" ]; then
                 tool_bin="$formula_cellar"
             fi
@@ -306,6 +378,9 @@ scan_homebrew() {
                     ;;
                 "x86_64")
                     print_row "$formula (Binary)" "Intel Only (x86_64)" "$RED"
+                    ;;
+                "Script")
+                    print_row "$formula (Script)" "Script (Platform Agnostic)" "$GREEN"
                     ;;
                 *)
                     print_row "$formula (Binary)" "Unknown Architecture" "$YELLOW"
@@ -342,6 +417,9 @@ scan_homebrew() {
                         ;;
                     "x86_64")
                         print_row "$cask (Cask)" "Intel Only (x86_64)" "$RED"
+                        ;;
+                    "Script")
+                        print_row "$cask (Cask)" "Script (Platform Agnostic)" "$GREEN"
                         ;;
                     *)
                         print_row "$cask (Cask)" "Unknown Architecture" "$YELLOW"
@@ -408,6 +486,9 @@ scan_npm() {
                         ;;
                     "x86_64")
                         print_row "$pkg [$addon_file]" "Intel Only (x86_64)" "$RED"
+                        ;;
+                    "Script")
+                        print_row "$pkg [$addon_file]" "Script (Platform Agnostic)" "$GREEN"
                         ;;
                     *)
                         print_row "$pkg [$addon_file]" "Unknown Architecture" "$YELLOW"
@@ -698,7 +779,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         if(al.indexOf("universal")!==-1)stats.universal++;
         else if(al.indexOf("apple silicon")!==-1||al.indexOf("arm64")!==-1)stats.arm64++;
         else if(al.indexOf("intel")!==-1||al.indexOf("x86_64")!==-1)stats.intel++;
-        else if(al.indexOf("javascript")!==-1||al.indexOf("agnostic")!==-1)stats.jsOnly++;
+        else if(al.indexOf("javascript")!==-1||al.indexOf("agnostic")!==-1||al.indexOf("script")!==-1)stats.jsOnly++;
         else stats.unknown++;
 
         if(al.indexOf("intel")!==-1||al.indexOf("x86_64")!==-1){

@@ -66,8 +66,11 @@ export default function RemediationFeed({ result, filterType, searchQuery }: Rem
       const q = searchQuery.toLowerCase();
       return (
         item.name.toLowerCase().includes(q) ||
-        (item.issue && item.issue.toLowerCase().includes(q)) ||
-        (item.recommendation && item.recommendation.toLowerCase().includes(q))
+        item.architecture.toLowerCase().includes(q) ||
+        item.issue.toLowerCase().includes(q) ||
+        item.type.toLowerCase().includes(q) ||
+        (item.path && item.path.toLowerCase().includes(q)) ||
+        (item.architecture.toLowerCase().includes('script') && q === 'script')
       );
     }
     return true;

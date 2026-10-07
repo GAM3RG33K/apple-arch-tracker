@@ -57,7 +57,7 @@ const getStaticRecommendation = (name: string, type: 'application' | 'brew-binar
     }
   }
 
-  if (type === 'brew-binary' || type === 'brew-service') {
+  if (type === 'brew-binary' || type === 'brew-service' || type === 'brew-formula') {
     const serviceSuffix = type === 'brew-service' ? ' service' : '';
     switch (normName) {
       case 'redis':
@@ -95,6 +95,12 @@ const getStaticRecommendation = (name: string, type: 'application' | 'brew-binar
           recommendation: `Rebuild wget for Apple Silicon: \n\`\`\`bash\nbrew reinstall wget\n\`\`\``
         };
       default:
+        if (type === 'brew-formula') {
+          return {
+            issue: `${name} formula may be outdated or installed under Rosetta. Run brew upgrade to get the latest Apple Silicon build.`,
+            recommendation: `Update ${name} to latest version: \n\`\`\`bash\nbrew upgrade ${name}\n\`\`\``
+          };
+        }
         return {
           issue: `${name}${serviceSuffix} is compiled for Intel Only. This suggests Homebrew was installed under a Rosetta terminal session inside /usr/local.`,
           recommendation: `If most of your Brew packages are Intel Only, we recommend installing Homebrew natively into /opt/homebrew: \n\`\`\`bash\n/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"\n\`\`\``
@@ -210,6 +216,8 @@ export const parseTrackerLog = (log: string): ParseResult => {
         } else if (currentModule === 'homebrew') {
           if (name.includes('(Service)')) {
             type = 'brew-service';
+          } else if (name.includes('(Formula)')) {
+            type = 'brew-formula';
           } else {
             type = 'brew-binary';
           }
@@ -224,19 +232,30 @@ export const parseTrackerLog = (log: string): ParseResult => {
           stats.arm64++;
         } else if (arch.toLowerCase().includes('intel only') || arch.toLowerCase().includes('x86_64')) {
           stats.intel++;
-        } else if (arch.toLowerCase().includes('javascript') || arch.toLowerCase().includes('agnostic')) {
+        } else if (arch.toLowerCase().includes('javascript') || arch.toLowerCase().includes('agnostic') || arch.toLowerCase().includes('script')) {
           stats.jsOnly++;
         } else {
           stats.unknown++;
         }
 
-        // If it is Intel, mark for migration list
-          if (arch.toLowerCase().includes('intel') || arch.toLowerCase().includes('x86_64')) {
+        // If it is Intel or Formula, mark for migration list
+        if (arch.toLowerCase().includes('intel') || arch.toLowerCase().includes('x86_64')) {
           const defaults = getStaticRecommendation(name, type);
           itemsToMigrate.push({
             id: `item-${currentModule}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${i}`,
             name,
             architecture: 'Intel Only (x86_64)',
+            type,
+            issue: defaults.issue,
+            recommendation: defaults.recommendation,
+            path: itemPath
+          });
+        } else if (type === 'brew-formula') {
+          const defaults = getStaticRecommendation(name, type);
+          itemsToMigrate.push({
+            id: `item-${currentModule}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${i}`,
+            name,
+            architecture: 'Formula (Update Available)',
             type,
             issue: defaults.issue,
             recommendation: defaults.recommendation,
